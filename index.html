@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盯鞋成分鉴定器</title>
+    <style>
+        body { 
+            background-color: #12122b; 
+            color: #d1d1f0; 
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0;
+            overflow-x: hidden;
+        }
+        #quiz-container { 
+            width: 90%; 
+            max-width: 450px; 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 40px 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+        .main-title { 
+            font-size: 32px; font-weight: 200; letter-spacing: 4px; 
+            margin-bottom: 10px; color: #fff; text-transform: uppercase;
+            animation: breathe 3s infinite ease-in-out;
+        }
+        .sub-title { font-size: 14px; letter-spacing: 6px; color: #a2a2ff; margin-bottom: 40px; opacity: 0.8; }
+        @keyframes breathe {
+            0%, 100% { opacity: 0.7; text-shadow: 0 0 10px #7a7aff; }
+            50% { opacity: 1; text-shadow: 0 0 20px #7a7aff; }
+        }
+        .option-btn { 
+            display: block; width: 100%; margin: 12px 0; padding: 15px; 
+            background: rgba(255, 255, 255, 0.08); color: #fff; 
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; 
+            cursor: pointer; transition: 0.3s; text-align: left; font-size: 15px;
+        }
+        .option-btn:hover { background: rgba(100, 100, 255, 0.25); border-color: #7a7aff; }
+        .start-btn { text-align: center; background: #4e4e91; border: none; font-weight: bold; letter-spacing: 2px; margin-top: 20px; }
+        h2 { font-weight: 300; margin-bottom: 25px; font-size: 18px; line-height: 1.5; }
+        #result-text { line-height: 1.8; font-size: 16px; margin: 20px 0; text-align: left; }
+        .hidden { display: none; }
+        .highlight { color: #a2a2ff; font-weight: bold; display: block; margin-bottom: 15px; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="welcome-box">
+        <h1 class="main-title">Shoegaze Aesthetic</h1>
+        <div class="sub-title">盯鞋成分检定测试</div>
+        <button class="option-btn start-btn" onclick="startQuiz()">开始检定</button>
+    </div>
+
+    <div id="question-box" class="hidden">
+        <h2 id="question-text">正在捕捉反馈噪音...</h2>
+        <div id="options"></div>
+    </div>
+    
+    <div id="result-box" class="hidden">
+        <h2 style="letter-spacing: 4px;">检定报告</h2>
+        <div id="result-text"></div>
+        <button class="option-btn" style="text-align:center" onclick="location.reload()">重新遁入音墙</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            q: "现在你进入了梦幻世界，你碰到的第一种魔法生物是：",
+            options: [
+                { text: "带着黑夜与腐败之血气息的吸血鬼", scores: { jamc: 0.5, mbv: 0.5 } },
+                { text: "在树影斑驳中闪烁的林地精灵", scores: { slowdive: 0.5, ride: 0.5 } },
+                { text: "正在调制某种紫色药水的神秘女巫", scores: { mbv: 0.5, slowdive: 0.5 } },
+                { text: "伴随着清冽浪潮歌唱的海妖塞壬", scores: { jamc: 0.5, ride: 0.5 } }
+            ]
+        },
+        {
+            q: "你发现了一扇通往不知通向何处的门，你会猜测它应该通向：",
+            options: [
+                { text: "有着温暖壁炉的小屋，让你想起家的气息", scores: { slowdive: 0.7, ride: 0.3 } },
+                { text: "一望无际空旷的原野，狂风仿佛能够摧毁一切", scores: { ride: 0.7, jamc: 0.3 } },
+                { text: "宇宙般璀璨的星河，像是通往循环的下一个梦境", scores: { mbv: 0.7, slowdive: 0.3 } },
+                { text: "没有任何地方，只是纯粹的虚无", scores: { jamc: 0.7, mbv: 0.3 } }
+            ]
+        },
+        {
+            q: "这时你听见门后有一种声音，那听起来像：",
+            options: [
+                { text: "很悦耳，像清晨的雾气，柔和且若隐若现", scores: { slowdive: 1 } },
+                { text: "听不清楚，像果冻一样不成形地扭曲、融化、摇晃", scores: { mbv: 1 } },
+                { text: "令人疯狂，令人痛苦，像电锯般直接锯开大脑", scores: { jamc: 1 } },
+                { text: "明亮，像快速行驶的车窗外呼啸而过的风", scores: { ride: 1 } }
+            ]
+        },
+        {
+            q: "如果要选择一种气味来描述此刻的氛围，那是？",
+            options: [
+                { text: "过热融化的塑料和晶体，却有一种糖果的香味", scores: { mbv: 0.9, jamc: 0.1 } },
+                { text: "燃烧的香烟、机油与皮革的刺鼻气息", scores: { jamc: 0.9, mbv: 0.1 } },
+                { text: "翻动的书页与刚修剪过的草坪的那种清香", scores: { ride: 0.9, slowdive: 0.1 } },
+                { text: "雨后潮湿的泥土与静谧森林的自然芬芳", scores: { slowdive: 0.9, ride: 0.1 } }
+            ]
+        },
+        {
+            q: "门后透出的光影隐隐约约像是？",
+            options: [
+                { text: "黑白闪烁的电视雪花片", scores: { jamc: 1 } },
+                { text: "浓稠的粉紫色浓雾", scores: { mbv: 1 } },
+                { text: "深蓝色的水底透出的浮光跃金", scores: { slowdive: 1 } },
+                { text: "午后耀眼的金色阳光", scores: { ride: 1 } }
+            ]
+        },
+        {
+            q: "你推开了门，原来门后只是一个异世界的酒吧，现在点杯特调：",
+            options: [
+                { text: "装在透明玻璃杯里的莫吉托，混合了薄荷与青柠", scores: { ride: 1 } },
+                { text: "一杯生猛的纯波本威士忌，加冰", scores: { jamc: 1 } },
+                { text: "高脚杯里的一小口绿色的玛格丽特", scores: { slowdive: 1 } },
+                { text: "奶油咖啡利口酒与伏特加为基底的白俄罗斯", scores: { mbv: 1 } }
+            ]
+        },
+        {
+            q: "一个神秘生物向你走来，ta对你说的第一句话是：",
+            options: [
+                { text: "“太阳还没有落山，或许还有时间离开。”", scores: { ride: 1 } },
+                { text: "“不要看着我。”", scores: { jamc: 1 } },
+                { text: "“我闭上眼时听见了一种色彩破碎的声音。”", scores: { mbv: 1 } },
+                { text: "“这个地方没有时间流逝。”", scores: { slowdive: 1 } }
+            ]
+        },
+        {
+            q: "那个生物向你展示了一种魔法，你觉得那更像是：",
+            options: [
+                { text: "水系：让你感觉在深海中缓慢下沉", scores: { slowdive: 1 } },
+                { text: "风系：让你感觉吹散了所有的阴霾", scores: { ride: 1 } },
+                { text: "火系：让你感觉烈焰会烧毁一切", scores: { jamc: 1 } },
+                { text: "地系：让你感到厚重且无法动弹", scores: { mbv: 1 } }
+            ]
+        },
+        {
+            q: "魔法师决定带你离开这里，你们的交通工具是：",
+            options: [
+                { text: "一辆复古敞篷车，被涂上新漆", scores: { ride: 0.8, slowdive: 0.2 } },
+                { text: "一辆破旧的轰鸣的黑色机车，看起来还在冒烟", scores: { jamc: 0.8, ride: 0.2 } },
+                { text: "一个巨大的、透明的漂浮座椅", scores: { slowdive: 0.8, mbv: 0.2 } },
+                { text: "一个形状神秘的滑翔器", scores: { mbv: 0.8, jamc: 0.2 } }
+            ]
+        },
+        {
+            q: "在旅途的终点你要醒来了，你最后的感受是：",
+            options: [
+                { text: "一种毁灭的感觉，世界化为灰烬", scores: { jamc: 0.8, slowdive: 0.2 } },
+                { text: "一种旋涡般的晕眩，你想将自己融化在环境里", scores: { mbv: 0.8, jamc: 0.2 } },
+                { text: "一种结束的平静，你只想如回归母体般蜷缩", scores: { slowdive: 0.8, ride: 0.2 } },
+                { text: "一种充满希望的颤栗，你仍然拥有明天", scores: { ride: 0.8, mbv: 0.2 } }
+            ]
+        }
+    ];
+
+    let currentQ = 0;
+    let scores = { jamc: 0, mbv: 0, slowdive: 0, ride: 0 };
+
+    function startQuiz() {
+        document.getElementById('welcome-box').classList.add('hidden');
+        document.getElementById('question-box').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if (currentQ < questions.length) {
+            let qData = questions[currentQ];
+            document.getElementById('question-text').innerText = qData.q;
+            let optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            qData.options.forEach(opt => {
+                let btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => {
+                    for (let band in opt.scores) {
+                        scores[band] += opt.scores[band];
+                    }
+                    currentQ++;
+                    showQuestion();
+                };
+                optionsDiv.appendChild(btn);
+            });
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('question-box').classList.add('hidden');
+        document.getElementById('result-box').classList.remove('hidden');
+        
+        let winner = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        let totalScore = scores.jamc + scores.mbv + scores.slowdive + scores.ride;
+
+        const resultData = {
+            jamc: {
+                title: "The Jesus and Mary Chain",
+                comment: "你或许更喜欢极端危险、毁灭的、后朋的，却仍然甜美的东西。那就是苏格兰兄弟的美学。",
+                bands: "The Telescopes, Black Rebel Motorcycle Club, A Place to Bury Strangers, The Raveonettes（早期）"
+            },
+            mbv: {
+                title: "My Bloody Valentine",
+                comment: "你不介意nerd式的钻研，显然mbv的音墙就是你的归宿。",
+                bands: "Astrobrite, Fleeting Joys, My Vitriol, Bowery Electric, Loveliescrushing"
+            },
+            slowdive: {
+                title: "Slowdive",
+                comment: "你爱宁静的、优雅的梦幻流行的海洋，最温柔与舒缓的slowdive更适合你。",
+                bands: "Lush, Cocteau Twins, Mojave 3, Beach House, Cigarettes After Sex"
+            },
+            ride: {
+                title: "Ride",
+                comment: "你还是最喜欢明亮且清爽的少年感，所以ride的气质会带你逃离。",
+                bands: "Chapterhouse, Pale Saints, DIIV, Swervedriver, Catherine Wheel"
+            }
+        };
+
+        const win = resultData[winner];
+
+        let res = `
+            <span class="highlight" style="font-size: 22px; letter-spacing: 2px;">${win.title}</span>
+            <p style="color: #d1d1f0; margin-bottom: 25px; line-height: 1.6;">“${win.comment}”</p>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; font-size: 14px; margin-bottom: 25px;">
+                <p style="margin: 0 0 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;"><strong>📊 检定百分比</strong></p>
+                后 JAMC：${((scores.jamc/totalScore)*100).toFixed(0)}% <br>
+                后 MBV：${((scores.mbv/totalScore)*100).toFixed(0)}% <br>
+                后 Slowdive：${((scores.slowdive/totalScore)*100).toFixed(0)}% <br>
+                后 Ride：${((scores.ride/totalScore)*100).toFixed(0)}%
+            </div>
+
+            <div style="text-align: left;">
+                <p style="margin-bottom: 8px; color: #a2a2ff;"><strong>🎧 推荐扩听：</strong></p>
+                <p style="color: #cfcfff; font-size: 13px; line-height: 1.6; margin-top: 0;">${win.bands}</p>
+            </div>
+        `;
+        document.getElementById('result-text').innerHTML = res;
+    }
+</script>
+</body>
+</html>
